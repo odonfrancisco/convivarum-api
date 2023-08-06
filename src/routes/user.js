@@ -1,0 +1,39 @@
+import passport from 'passport'
+import express from 'express'
+import bcrypt from 'bcrypt'
+
+import { User } from '#schema/index.js'
+const router = express.Router()
+
+import validateEmail from '#fn/validateEmail.js'
+import { validReachOutMethods } from '#config.js'
+
+router.get('/get', async (req, res) => {
+  const user = req.user
+
+  const userDoc = await User.findById({ _id: user._id }).lean()
+  res.status(200).json(userDoc)
+})
+
+router.post('/update', async (req, res) => {
+  const { email, freq } = req.body
+  const user = req.user
+
+  if (!validateEmail(email)) {
+    res.status(400).json({ message: 'Please provide a valid email address' })
+    return
+  }
+
+  for (const method of Object.keys(freq)) {
+    if (!validReachOutMethods[method]) {
+      res.status(400).json({ message: 'Please submit valid reach out methods' })
+      return
+    }
+  }
+
+  await User.findByIdAndUpdate({ _id: user._id }, { $set: { email, freq } })
+
+  res.status(200).send('User updated successfully')
+})
+
+export default router
