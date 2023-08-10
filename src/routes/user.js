@@ -1,6 +1,4 @@
-import passport from 'passport'
 import express from 'express'
-import bcrypt from 'bcrypt'
 
 import { User } from '#schema/index.js'
 const router = express.Router()
@@ -24,14 +22,17 @@ router.post('/update', async (req, res) => {
     return
   }
 
-  for (const method of Object.keys(freq)) {
+  for (const [method, int] of Object.entries(freq)) {
     if (!validReachOutMethods[method]) {
       res.status(400).json({ message: 'Please submit valid reach out methods' })
       return
     }
   }
 
-  await User.findByIdAndUpdate({ _id: user._id }, { $set: { email, freq } })
+  await User.findByIdAndUpdate(
+    { _id: user._id },
+    { $set: { email, freq, next: user.next || Date.now() } },
+  )
 
   res.status(200).send('User updated successfully')
 })

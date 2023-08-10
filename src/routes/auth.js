@@ -91,11 +91,9 @@ router.get('/loggedin', (req, res, next) => {
 })
 
 router.get('/logout', (req, res, next) => {
-  req.logout((err, ...rest) => {
-    if (err) {
-      return next(err)
-    }
-    // res.status(200).json({ message: 'Success in logging out' })
+  req.logout(err => {
+    if (err) return next(err)
+
     res.redirect('/')
   })
 })

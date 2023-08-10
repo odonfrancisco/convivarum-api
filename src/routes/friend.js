@@ -1,6 +1,4 @@
-import passport from 'passport'
 import express from 'express'
-import bcrypt from 'bcrypt'
 
 import { Friend } from '#schema/index.js'
 const router = express.Router()

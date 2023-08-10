@@ -8,8 +8,10 @@ import MongoStore from 'connect-mongo'
 import { port } from '#config.js'
 import setupPassport from '#passport.js'
 
-import auth from '#routes/auth.js'
+import runCronJobs from '#cron/index.js'
+
 import friend from '#routes/friend.js'
+import auth from '#routes/auth.js'
 import user from '#routes/user.js'
 
 const app = express()
@@ -52,4 +54,6 @@ app.listen(port, async () => {
     .connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('Could not connect to MongoDB...', err))
+
+  runCronJobs()
 })
