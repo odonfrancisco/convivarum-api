@@ -20,18 +20,18 @@ export default async function pickFriend(user) {
     const userUpdates = { next: null }
 
     await Promise.all(
-      Object.entries(freq).map(async ([method, { last, interval }]) => {
-        const processMethod = !last || last + interval < tommorrow
-        if (!processMethod || !interval) return
+      Object.entries(freq).map(async ([action, { last, interval }]) => {
+        const processAction = !last || last + interval < tommorrow
+        if (!processAction || !interval) return
 
         const [uncontacted, current] = await Promise.all([
           Friend.find({
-            method,
+            action,
             user: user._id,
             enabled: true,
             contacted: false,
           }),
-          Friend.findOne({ method, user: user._id, current: true }),
+          Friend.findOne({ action, user: user._id, current: true }),
         ])
 
         const randomDoc = uncontacted[Math.floor(Math.random() * uncontacted.length)]
@@ -40,15 +40,15 @@ export default async function pickFriend(user) {
         randomDoc.set({ current: true, contacted: true })
 
         const msg = await sendMail(
-          `It's time for you to ${customMsg[method] || method} ${randomDoc.name}`,
+          `It's time for you to ${customMsg[action] || action} ${randomDoc.name}`,
           email,
         )
         if (!msg) {
-          console.log(`Error sending mail to ${email} on ${method} for ${randomDoc.name}`)
+          console.log(`Error sending mail to ${email} on ${action} for ${randomDoc.name}`)
           return
         }
 
-        userUpdates[`freq.${method}.last`] = Date.now()
+        userUpdates[`freq.${action}.last`] = Date.now()
         if (!userUpdates.next) userUpdates.next = Date.now() + interval
         else userUpdates.next = Math.min(Date.now() + interval, userUpdates.next)
 

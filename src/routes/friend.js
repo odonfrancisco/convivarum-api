@@ -3,16 +3,17 @@ import express from 'express'
 import { Friend } from '#schema/index.js'
 const router = express.Router()
 
-import { reachOutMethods, validReachOutMethods } from '#config.js'
+import { actions, validActions } from '#config.js'
 
 const sortTypes = {
   enabled: {
     fields: ['enabled', 'disabled'],
     check: doc => (doc.enabled ? 'enabled' : 'disabled'),
   },
-  method: {
-    fields: reachOutMethods,
-    check: doc => doc.method,
+  // Want to combine the bottom two
+  action: {
+    fields: actions,
+    check: doc => doc.action,
   },
   contacted: {
     fields: ['true', 'false'],
@@ -22,19 +23,19 @@ const sortTypes = {
 
 router.post('/create', async (req, res) => {
   const user = req.user
-  if (req.body?.method) req.body.method = req.body.method.toLowerCase()
-  const { name, method, details = '' } = req.body
-  if (!name || !method) {
-    return res.status(400).send('Please provide both a name and the preferred reach out method')
+  if (req.body?.action) req.body.action = req.body.action.toLowerCase()
+  const { name, action, details = '' } = req.body
+  if (!name || !action) {
+    return res.status(400).send('Please provide both a name and the preferred reach out action')
   }
 
-  if (!validReachOutMethods[method]) {
-    return res.status(400).send('Please provide a valid reach out method')
+  if (!validActions[action]) {
+    return res.status(400).send('Please provide a valid action')
   }
 
   const newFriend = new Friend({
     name,
-    method,
+    action,
     user: user._id,
     details,
   })
@@ -48,7 +49,7 @@ router.post('/create', async (req, res) => {
     return
   }
 
-  res.status(200).json(savedFriend)
+  res.status(200).json({ data: savedFriend })
 })
 
 router.get('/get', async (req, res) => {
@@ -69,44 +70,45 @@ router.get('/get', async (req, res) => {
     ret[field].push(doc)
   }
 
-  res.status(200).json(ret)
+  res.status(200).json({ data: ret })
 })
 
-router.post('/update', async (req, res) => {
+router.post('/update/:id', async (req, res) => {
   const updates = req.body
-  if (!updates._id) return res.status(400).send('Please ensure updating a valid friend document')
-  if (!validReachOutMethods[updates.method]) {
-    return res.status(400).send('Please provide a valid reach out method')
+  const id = req.params?.id
+  if (!id) return res.status(400).send('Please ensure updating a valid friend document')
+  if (!validActions[updates.action]) {
+    return res.status(400).send('Please provide a valid action')
   }
 
-  const updatedFriend = await Friend.findByIdAndUpdate({ _id: updates._id }, { $set: updates })
+  const updatedFriend = await Friend.findByIdAndUpdate({ _id: id }, { $set: updates })
 
-  res.status(200).json(updatedFriend)
+  res.status(200).json({ data: updatedFriend })
 })
 
 router.get('/current', async (req, res) => {
   const user = req.user
-  const method = req.query.method
+  const action = req.query.action
 
   const docs = await Friend.find({
     user: user._id,
     current: true,
-    ...(method && { method }),
+    ...(action && { action }),
   }).lean()
 
-  if (method) return res.status(200).json(docs[0])
+  if (action) return res.status(200).json({ data: docs[0] })
 
   const ret = {}
-  for (const doc of docs) ret[doc.method] = doc
+  for (const doc of docs) ret[doc.action] = doc
 
-  res.status(200).json(ret)
+  res.status(200).json({ data: ret })
 })
 
 router.post('/changeCurrent', async (req, res) => {
   const user = req.user
-  const { method = 'hang', friendId } = req.body
+  const { action = 'hang', friendId } = req.body
 
-  const current = await Friend.findOne({ user: user._id, method, current: true })
+  const current = await Friend.findOne({ user: user._id, action, current: true })
   current.set({
     current: false,
     contacted: false,

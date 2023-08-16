@@ -4,13 +4,13 @@ import { User } from '#schema/index.js'
 const router = express.Router()
 
 import validateEmail from '#fn/validateEmail.js'
-import { validReachOutMethods } from '#config.js'
+import { validActions } from '#config.js'
 
 router.get('/get', async (req, res) => {
   const user = req.user
 
   const userDoc = await User.findById({ _id: user._id }).lean()
-  res.status(200).json(userDoc)
+  res.status(200).json({ data: userDoc })
 })
 
 router.post('/update', async (req, res) => {
@@ -22,9 +22,9 @@ router.post('/update', async (req, res) => {
     return
   }
 
-  for (const [method, int] of Object.entries(freq)) {
-    if (!validReachOutMethods[method]) {
-      res.status(400).json({ message: 'Please submit valid reach out methods' })
+  for (const [action, int] of Object.entries(freq)) {
+    if (!validActions[action]) {
+      res.status(400).json({ message: 'Please submit valid action' })
       return
     }
   }

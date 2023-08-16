@@ -4,6 +4,8 @@ import session from 'express-session'
 import passport from 'passport'
 import bodyParser from 'body-parser'
 import MongoStore from 'connect-mongo'
+import cookieParser from 'cookie-parser'
+import cors from 'cors'
 
 import { port } from '#config.js'
 import setupPassport from '#passport.js'
@@ -17,7 +19,25 @@ import user from '#routes/user.js'
 const app = express()
 setupPassport(passport)
 
+const allowedOrigins = ['http://localhost:3000', 'https://convivarum.odonfrancis.co'].reduce(
+  (a, c) => {
+    a[c] = true
+    return a
+  },
+  {},
+)
+
 app.use(bodyParser.json())
+app.use(cookieParser())
+app.use(
+  cors({
+    credentials: true,
+    origin: (origin, cb) => {
+      if (!origin || !allowedOrigins[origin]) cb(new Error('Not allowed by CORS'))
+      else cb(null, true)
+    },
+  }),
+)
 
 app.use(
   session({
@@ -29,9 +49,23 @@ app.use(
     }),
     cookie: {
       maxAge: 24 * 60 * 60 * 1000,
+      // secure: PROD,
     },
   }),
 )
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credential', true)
+  res.header(
+    'Access-Control-Allow-Headers',
+    'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept',
+  )
+  if ('OPTIONS' == req.method) {
+    res.send(200)
+  } else {
+    next()
+  }
+})
 
 app.use(passport.initialize())
 app.use(passport.session())

@@ -51,7 +51,7 @@ router.post('/signup', async (req, res) => {
       return
     }
 
-    res.status(200).send('Signed in successfully')
+    res.status(200).send({ success: true })
   })
 })
 
@@ -65,7 +65,7 @@ router.post('/login', (req, res, next) => {
     }
 
     if (!user) {
-      res.status(401).json(errMsg)
+      res.status(401).json({ err: errMsg })
       return
     }
 
@@ -77,17 +77,14 @@ router.post('/login', (req, res, next) => {
         return
       }
 
-      res.status(200).send('Logged in successfully')
+      res.status(200).send({ success: true })
     })
   })(req, res, next)
 })
 
 router.get('/loggedin', (req, res, next) => {
-  if (req.isAuthenticated()) {
-    res.status(200).json(req.user)
-    return
-  }
-  res.status(403).json({ message: 'Unauthorized' })
+  res.status(200).json({ success: req.isAuthenticated(), user: req.user })
+  return
 })
 
 router.get('/logout', (req, res, next) => {

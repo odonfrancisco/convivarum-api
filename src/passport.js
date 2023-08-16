@@ -7,11 +7,15 @@ const LocalStrategy = passport_local.Strategy
 export default passport => {
   passport.use(
     new LocalStrategy({ usernameField: 'username' }, async (username, password, done) => {
-      const user = await User.findOne({ username })
+      const user = await User.findOne({ username }, '+password')
 
       if (!user) {
         done(null, false, { message: 'Your username or password is out of this world' })
         return
+      }
+
+      if (!user.password) {
+        done(null, false, { message: 'DB error', status: 500 })
       }
 
       if (!bcrypt.compareSync(password, user.password)) {
