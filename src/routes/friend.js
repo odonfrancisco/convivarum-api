@@ -45,7 +45,7 @@ router.post('/create', async (req, res) => {
   if (!savedFriend) {
     res
       .status(400)
-      .json({ message: 'Something with our server went wrong, try again or send us feedback' })
+      .json({ msg: 'Something with our server went wrong, try again or send us feedback' })
     return
   }
 

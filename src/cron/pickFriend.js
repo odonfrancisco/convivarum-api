@@ -14,15 +14,17 @@ export default async function pickFriend(user) {
   // Should promisepool it
   // Could take measures to make this more extensible with a greater number of data but chillen for now
   for (const user of users) {
-    const { freq, email } = user
-    if (!freq) continue
+    const { action, email } = user
+    if (!action) continue
 
     const userUpdates = { next: null }
 
     await Promise.all(
-      Object.entries(freq).map(async ([action, { last, interval }]) => {
+      Object.entries(action).map(async ([action, { last, interval }]) => {
         const processAction = !last || last + interval < tommorrow
         if (!processAction || !interval) return
+
+        const proms = []
 
         const [uncontacted, current] = await Promise.all([
           Friend.find({
@@ -34,13 +36,43 @@ export default async function pickFriend(user) {
           Friend.findOne({ action, user: user._id, current: true }),
         ])
 
+        if (!uncontacted.length) {
+          const contacted = await Friend.find({
+            user: user._id,
+            action,
+            enabled: true,
+            contacted: true,
+            current: false,
+          })
+
+          if (!contacted.length) {
+            // One friend in this action
+            if (current) uncontacted.push(current)
+            // No friends in this action
+            else return
+          } else if (contacted.length === 1) {
+            uncontacted.push(contacted[0])
+          } else {
+            for (const doc of contacted) {
+              // handle updating the 'contacted' prop to false on each friend doc
+              doc.set({ current: false })
+              uncontacted.push(doc)
+              proms.push(doc)
+            }
+          }
+        }
+
         const randomDoc = uncontacted[Math.floor(Math.random() * uncontacted.length)]
 
-        current.set({ current: false })
+        // When user first signs up, none of their friends will be current
+        if (current && current._id !== randomDoc?._id) current.set({ current: false })
         randomDoc.set({ current: true, contacted: true })
 
         const msg = await sendMail(
-          `It's time for you to ${customMsg[action] || action} ${randomDoc.name}`,
+          {
+            action: customMsg[action] || action,
+            name: randomDoc.name,
+          },
           email,
         )
         if (!msg) {
@@ -48,11 +80,15 @@ export default async function pickFriend(user) {
           return
         }
 
-        userUpdates[`freq.${action}.last`] = Date.now()
+        userUpdates[`action.${action}.last`] = Date.now()
         if (!userUpdates.next) userUpdates.next = Date.now() + interval
         else userUpdates.next = Math.min(Date.now() + interval, userUpdates.next)
 
-        await Promise.all([current.save(), randomDoc.save()])
+        await Promise.all([
+          current && current !== randomDoc && current.save(),
+          randomDoc.save(),
+          ...proms.map(d => d.save()),
+        ])
       }),
     )
 

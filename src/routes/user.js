@@ -14,27 +14,39 @@ router.get('/get', async (req, res) => {
 })
 
 router.post('/update', async (req, res) => {
-  const { email, freq } = req.body
+  const { username, email, ...body } = req.body
   const user = req.user
 
+  // If email !== user.email, need to run an email validation cycle
+
   if (!validateEmail(email)) {
-    res.status(400).json({ message: 'Please provide a valid email address' })
+    res.status(400).json({ msg: 'Please provide a valid email address' })
     return
   }
 
-  for (const [action, int] of Object.entries(freq)) {
+  for (const [key, int] of Object.entries(body)) {
+    if (!key.startsWith('action')) continue
+    const action = key.split('.')[1]
+    if (!Number.isInteger(int)) body[key] = 0
     if (!validActions[action]) {
-      res.status(400).json({ message: 'Please submit valid action' })
+      res.status(400).json({ msg: 'Please submit valid action' })
       return
     }
   }
 
   await User.findByIdAndUpdate(
     { _id: user._id },
-    { $set: { email, freq, next: user.next || Date.now() } },
+    {
+      $set: {
+        username,
+        email,
+        next: user.next || Date.now(),
+        ...body,
+      },
+    },
   )
 
-  res.status(200).send('User updated successfully')
+  res.status(200).send({ msg: 'User updated successfully' })
 })
 
 export default router

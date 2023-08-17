@@ -11,18 +11,18 @@ router.post('/signup', async (req, res) => {
   const { username, password, email } = req.body
 
   if (!username || !password || !email) {
-    res.status(400).json({ message: 'Please provide both a username, password & email' })
+    res.status(400).json({ msg: 'Please provide both a username, password & email' })
     return
   }
 
   if (!validateEmail(email)) {
-    res.status(400).json({ message: 'Please provide a valid email address' })
+    res.status(400).json({ msg: 'Please provide a valid email address' })
     return
   }
 
   const user = await User.findOne({ username }, '_id').lean()
   if (user) {
-    res.status(400).json({ message: 'This username already exists' })
+    res.status(400).json({ msg: 'This username already exists' })
     return
   }
 
@@ -39,14 +39,14 @@ router.post('/signup', async (req, res) => {
   if (!savedUser) {
     res
       .status(400)
-      .json({ message: 'Something with our server went wrong, try again or send us feedback' })
+      .json({ msg: 'Something with our server went wrong, try again or send us feedback' })
     return
   }
 
   req.login(savedUser, err => {
     if (err) {
       res.status(500).json({
-        message: 'Something with our server went wrong, try again or send us feedback',
+        msg: 'Something with our server went wrong, try again or send us feedback',
       })
       return
     }
@@ -59,7 +59,7 @@ router.post('/login', (req, res, next) => {
   passport.authenticate('local', (err, user, errMsg) => {
     if (err) {
       res.status(500).json({
-        message: 'Something went wrong in our servers, try again or kindly send us feedback',
+        msg: 'Something went wrong in our servers, try again or kindly send us feedback',
       })
       return
     }
@@ -72,7 +72,7 @@ router.post('/login', (req, res, next) => {
     req.login(user, err => {
       if (err) {
         res.status(500).json({
-          message: 'Something went wrong in our servers, try again or kindly send us feedback',
+          msg: 'Something went wrong in our servers, try again or kindly send us feedback',
         })
         return
       }
