@@ -66,7 +66,7 @@ export default async function pickFriend(user) {
 
         // When user first signs up, none of their friends will be current
         if (current && current._id !== randomDoc?._id) current.set({ current: false })
-        randomDoc.set({ current: true, contacted: true })
+        randomDoc.set({ current: true, contacted: true, lastContacted: Date.now() })
 
         const msg = await sendMail(
           {
