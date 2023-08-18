@@ -15,6 +15,7 @@ import runCronJobs from '#cron/index.js'
 import friend from '#routes/friend.js'
 import auth from '#routes/auth.js'
 import user from '#routes/user.js'
+import health from '#routes/health.js'
 
 const app = express()
 setupPassport(passport)
@@ -69,6 +70,8 @@ app.use((req, res, next) => {
 
 app.use(passport.initialize())
 app.use(passport.session())
+
+app.use('/health', health)
 
 app.use('/api/auth', auth)
 
