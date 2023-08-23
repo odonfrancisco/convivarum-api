@@ -6,6 +6,7 @@ import bodyParser from 'body-parser'
 import MongoStore from 'connect-mongo'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
+import morgan from 'morgan'
 
 import { port } from '#config.js'
 import setupPassport from '#passport.js'
@@ -28,6 +29,7 @@ const allowedOrigins = ['http://localhost:3000', 'https://convivarum.odonfrancis
   {},
 )
 
+app.use(morgan('dev'))
 app.use(bodyParser.json())
 app.use(cookieParser())
 app.use(
