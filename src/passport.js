@@ -6,7 +6,8 @@ const LocalStrategy = passport_local.Strategy
 
 export default passport => {
   passport.use(
-    new LocalStrategy({ usernameField: 'username' }, async (username, password, done) => {
+    new LocalStrategy({ usernameField: 'username' }, async (name, password, done) => {
+      const username = name && name.toLowerCase()
       const user = await User.findOne({ username }, '+password')
 
       if (!user) {

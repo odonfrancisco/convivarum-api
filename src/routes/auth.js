@@ -8,7 +8,8 @@ const router = express.Router()
 import validateEmail from '#fn/validateEmail.js'
 
 router.post('/signup', async (req, res) => {
-  const { username, password, email } = req.body
+  const [username, email] = ['username', 'email'].map(key => (req.body[key] || '').toLowerCase())
+  const { password } = req.body
 
   if (!username || !password || !email) {
     res.status(400).json({ msg: 'Please provide both a username, password & email' })
