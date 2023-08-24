@@ -5,6 +5,7 @@ const router = express.Router()
 
 import validateEmail from '#fn/validateEmail.js'
 import { validActions } from '#config.js'
+import roundHour from '#fn/roundHour.js'
 
 router.get('/get', async (req, res) => {
   const user = req.user
@@ -14,7 +15,7 @@ router.get('/get', async (req, res) => {
 })
 
 router.post('/update', async (req, res) => {
-  const { username, email, ...body } = req.body
+  const { username, email, delayNext, ...body } = req.body
   const user = req.user
 
   // If email !== user.email, need to run an email validation cycle
@@ -32,7 +33,17 @@ router.post('/update', async (req, res) => {
       res.status(400).json({ msg: 'Please submit valid action' })
       return
     }
+    const actionObj = user.action[action]
+    if (!actionObj) continue
+
+    const changed = actionObj.interval !== int
+    if (!changed || !actionObj.last || !user.next) continue
+
+    const newNext = roundHour.dayStart(actionObj.last + int)
+    user.next = Math.min(user.next, newNext)
   }
+
+  if (delayNext) user.next = roundHour.dayStart(Date.now() + delayNext)
 
   await User.findByIdAndUpdate(
     { _id: user._id },
@@ -40,7 +51,7 @@ router.post('/update', async (req, res) => {
       $set: {
         username,
         email,
-        next: user.next || Date.now(),
+        next: user.next || roundHour.dayStart(Date.now()),
         ...body,
       },
     },

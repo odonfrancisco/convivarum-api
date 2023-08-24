@@ -21,9 +21,10 @@ router.post('/signup', async (req, res) => {
     return
   }
 
-  const user = await User.findOne({ username }, '_id').lean()
+  const user = await User.findOne({ $or: [{ username }, { email }] }, '_id username email').lean()
   if (user) {
-    res.status(400).json({ msg: 'This username already exists' })
+    const existingProp = user.username === username ? 'username' : 'email'
+    res.status(400).json({ msg: `This ${existingProp} is already in use` })
     return
   }
 

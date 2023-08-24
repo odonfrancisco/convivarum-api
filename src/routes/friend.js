@@ -10,7 +10,7 @@ const sortTypes = {
     fields: ['enabled', 'disabled'],
     check: doc => (doc.enabled ? 'enabled' : 'disabled'),
   },
-  // Want to combine the bottom two
+  // Want to combine the following two
   action: {
     fields: actions,
     check: doc => doc.action,
@@ -18,6 +18,10 @@ const sortTypes = {
   contacted: {
     fields: ['true', 'false'],
     check: doc => doc.contacted,
+  },
+  current: {
+    fields: actions,
+    check: doc => doc.current && doc.action,
   },
 }
 
@@ -56,6 +60,7 @@ router.get('/get', async (req, res) => {
   const user = req.user
   const docs = await Friend.find({ user: user._id }).lean()
 
+  // Should really be the frontend doing all the sorting. need to be careful sending too large of a payload
   if (!sortTypes[req.query.sort]) req.query.sort = 'enabled'
 
   const { fields, check } = sortTypes[req.query.sort]
@@ -67,6 +72,7 @@ router.get('/get', async (req, res) => {
 
   for (const doc of docs) {
     const field = check(doc)
+    if (!ret[field]) continue
     ret[field].push(doc)
   }
 
