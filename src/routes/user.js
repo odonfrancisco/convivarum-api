@@ -37,7 +37,8 @@ router.post('/update', async (req, res) => {
     if (!actionObj) continue
 
     const changed = actionObj.interval !== int
-    if (!changed || !actionObj.last || !user.next) continue
+    // If !actionObj.last, user.next shouldn't exist
+    if (!changed || !actionObj.last) continue
 
     const newNext = roundHour.dayStart(actionObj.last + int)
     user.next = Math.min(user.next, newNext)
@@ -51,7 +52,7 @@ router.post('/update', async (req, res) => {
       $set: {
         username,
         email,
-        next: user.next || roundHour.dayStart(Date.now()),
+        next: user.next,
         ...body,
       },
     },
