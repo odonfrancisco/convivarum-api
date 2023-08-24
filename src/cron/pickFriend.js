@@ -17,14 +17,13 @@ export default async function pickFriend(user) {
     const { action, email } = user
     if (!action) continue
 
-    const userUpdates = { next: null }
+    const userUpdates = { next: user.next || null }
+    let actionSetNext
 
     await Promise.all(
       Object.entries(action).map(async ([action, { last, interval }]) => {
         const processAction = !last || last + interval < tommorrow
         if (!processAction || !interval) return
-
-        const proms = []
 
         const [uncontacted, current] = await Promise.all([
           Friend.find({
@@ -55,17 +54,20 @@ export default async function pickFriend(user) {
           } else {
             for (const doc of contacted) {
               // handle updating the 'contacted' prop to false on each friend doc
-              doc.set({ current: false })
+              doc.set({ contacted: false })
               uncontacted.push(doc)
-              proms.push(doc)
             }
           }
         }
 
-        const randomDoc = uncontacted[Math.floor(Math.random() * uncontacted.length)]
+        const randomIndex = Math.floor(Math.random() * uncontacted.length)
+        const randomDoc = uncontacted[randomIndex]
+        uncontacted.splice(randomIndex, 1)
 
         // When user first signs up, none of their friends will be current
-        if (current && current._id !== randomDoc?._id) current.set({ current: false })
+        if (current && current._id !== randomDoc?._id) {
+          current.set({ current: false, contacted: false })
+        }
         randomDoc.set({ current: true, contacted: true, lastContacted: Date.now() })
 
         const msg = await sendMail(
@@ -81,16 +83,19 @@ export default async function pickFriend(user) {
         }
 
         userUpdates[`action.${action}.last`] = Date.now()
-        if (!userUpdates.next) userUpdates.next = Date.now() + interval
-        else userUpdates.next = Math.min(Date.now() + interval, userUpdates.next)
+        const newNext = roundHour.dayStart(Date.now() + interval)
+        if (!actionSetNext) actionSetNext = newNext
+        else actionSetNext = Math.min(newNext, actionSetNext)
 
         await Promise.all([
-          current && current !== randomDoc && current.save(),
+          current && current._id !== randomDoc._id && current.save(),
           randomDoc.save(),
-          ...proms.map(d => d.save()),
+          ...uncontacted.map(d => d.save()),
         ])
       }),
     )
+
+    userUpdates.next = actionSetNext
 
     await User.findByIdAndUpdate({ _id: user._id }, { $set: userUpdates })
   }

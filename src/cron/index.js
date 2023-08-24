@@ -3,9 +3,9 @@ import { scheduleJob } from 'node-schedule'
 import pickFriend from '#cron/pickFriend.js'
 
 export default function runCronJobs() {
-  pickFriend()
+  if (process.env.NODE_ENV !== 'production') pickFriend()
 
-  scheduleJob('0 */23 * * *', () => {
+  scheduleJob('0 */13 * * *', () => {
     pickFriend()
   })
 }
