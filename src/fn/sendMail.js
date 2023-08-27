@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 import randomQuote from 'random-quotes'
 
-import { API_BASE_URL } from '#config.js'
+import { BASE_URL } from '#config.js'
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.office365.com',
@@ -22,15 +22,17 @@ const mailTypes = {
      <p> - ${quote.author}</p>
 `,
   // <img src="${gifUrl}" alt="GIF" style="max-width: 100%;">
-  welcome: ({ name }) => `
+  welcome: ({ name }) =>
+    name &&
+    `
 <!DOCTYPE html>
 <html lang="en">
 ...
-<h2>Hello ${name} and Welcome to Convivarum!</h2>
+<h2>Hello ${name.charAt(0).toUpperCase() + name.slice(1)} and Welcome to Convivarum!</h2>
 ...
 <p>This app will help automate your social life. Yes, robots are seeping into every aspect of our life and yes, my girlfriend's name is Karen.</p>
     
-<img src="${API_BASE_URL}/assets/karen.gif" alt="GIF" style="max-width: 100%;">
+<img src="${BASE_URL}/assets/karen.gif" alt="GIF" style="max-width: 100%;">
 
 <h3>With that out of the way, let's go over some features:</h3>
 <ul class="features">
@@ -72,12 +74,15 @@ export default async function sendMail({ type = 'newFriend', name, action }, to)
 
   const quote = randomQuote.default()
 
+  const html = mailTypes[type]({ name, action, quote })
+  if (!html) return false
+
   const mailOptions = {
     from: `Hospite tuō ${process.env.HOST_EMAIL_USER}`,
     to,
     subject: 'Convivarum',
     text: 'Sup Boii',
-    html: mailTypes[type]({ name, action, quote }),
+    html,
   }
   try {
     const info = await transporter.sendMail(mailOptions)
