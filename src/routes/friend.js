@@ -4,6 +4,7 @@ import { Friend } from '#schema/index.js'
 const router = express.Router()
 
 import { actions, validActions } from '#config.js'
+import FriendPicker from '#fn/FriendPicker.js'
 
 const sortTypes = {
   enabled: {
@@ -30,11 +31,13 @@ router.post('/create', async (req, res) => {
   if (req.body?.action) req.body.action = req.body.action.toLowerCase()
   const { name, action, details = '' } = req.body
   if (!name || !action) {
-    return res.status(400).send('Please provide both a name and the preferred reach out action')
+    return res
+      .status(400)
+      .send({ msg: 'Please provide both a name and the preferred reach out action' })
   }
 
   if (!validActions[action]) {
-    return res.status(400).send('Please provide a valid action')
+    return res.status(400).send({ msg: 'Please provide a valid action' })
   }
 
   const newFriend = new Friend({
@@ -82,11 +85,12 @@ router.get('/get', async (req, res) => {
 router.post('/update/:id', async (req, res) => {
   const updates = req.body
   const id = req.params?.id
-  if (!id) return res.status(400).send('Please ensure updating a valid friend document')
+  if (!id) return res.status(400).send({ msg: 'Please ensure updating a valid friend document' })
   if (!validActions[updates.action]) {
-    return res.status(400).send('Please provide a valid action')
+    return res.status(400).send({ msg: 'Please provide a valid action' })
   }
 
+  // Need to inc interactions
   const updatedFriend = await Friend.findByIdAndUpdate({ _id: id }, { $set: updates })
 
   res.status(200).json({ data: updatedFriend })
@@ -110,41 +114,16 @@ router.get('/current', async (req, res) => {
   res.status(200).json({ data: ret })
 })
 
-router.post('/changeCurrent', async (req, res) => {
+router.get('/changeCurrent', async (req, res) => {
   const user = req.user
-  const { action = 'hang', friendId } = req.body
+  const action = req.query.action
 
-  const current = await Friend.findOne({ user: user._id, action, current: true })
-  current.set({
-    current: false,
-    contacted: false,
-  })
+  const Picker = new FriendPicker(user, action)
+  const { randomDoc } = await Picker.pickNewFriend(true)
 
-  if (friendId) {
-    const friendDoc = await Friend.findById({ _id: friendId })
-    if (friendDoc) {
-      friendDoc.set({
-        current: true,
-        contacted: true,
-      })
-
-      await Promise.all([current.save(), friendDoc.save()])
-
-      return res.status(200).send(`Successfully updated the current friend to ${friendDoc.name}`)
-    }
-  }
-
-  const uncontacted = await Friend.find({ user: user._id, contacted: false })
-  const randomDoc = uncontacted[Math.floor(Math.random() * uncontacted.length)]
-
-  randomDoc.set({
-    current: true,
-    contacted: true,
-  })
-
-  await Promise.all([current.save(), randomDoc.save()])
-
-  res.status(200).send(`Successfully updated the current friend to ${randomDoc.name}`)
+  res
+    .status(200)
+    .send({ msg: `Successfully updated the current friend to ${randomDoc.name}`, data: randomDoc })
 })
 
 export default router

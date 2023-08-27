@@ -9,6 +9,7 @@ const schema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, required: true },
   enabled: { type: Boolean, required: true, default: true },
   contacted: { type: Boolean, required: true, default: false },
+  interactions: { type: Number, default: 0 },
   lastContacted: Number,
   // Current denotes whether this is the current friend of the week/month etc
   // Only one friend per action can be current=true
