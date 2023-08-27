@@ -11,9 +11,7 @@ const welcomeUsers = async () => {
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('Could not connect to MongoDB...', err))
 
-  const users = await User.find()
-    .lean()
-    .then(arr => arr.filter(({ username }) => username === 'dont matter'))
+  const users = await User.find().lean()
 
   for (const user of users) {
     const res = await welcomeUser(user)
