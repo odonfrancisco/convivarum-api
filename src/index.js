@@ -36,8 +36,8 @@ app.use(
   cors({
     credentials: true,
     origin: (origin, cb) => {
-      if (!origin || !allowedOrigins[origin]) cb(new Error('Not allowed by CORS'))
-      else cb(null, true)
+      if (!origin || !allowedOrigins[origin]) return cb(new Error('Not allowed by CORS'))
+      cb(null, true)
     },
   }),
 )
@@ -74,12 +74,11 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 app.use('/health', health)
-
 app.use('/api/auth', auth)
 
 // Ensure authenticated
 app.use((req, res, next) => {
-  if (!req.isAuthenticated()) return res.status(401).send('Not Authenticated')
+  if (!req.isAuthenticated()) return res.status(401).send({ msg: 'Not Authenticated' })
   return next()
 })
 

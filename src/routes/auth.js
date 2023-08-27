@@ -6,6 +6,7 @@ import { User } from '#schema/index.js'
 const router = express.Router()
 
 import validateEmail from '#fn/validateEmail.js'
+import welcomeUser from '#fn/welcomeUser.js'
 
 router.post('/signup', async (req, res) => {
   const [username, email] = ['username', 'email'].map(key => (req.body[key] || '').toLowerCase())
@@ -53,6 +54,7 @@ router.post('/signup', async (req, res) => {
       return
     }
 
+    welcomeUser(savedUser)
     res.status(200).send({ success: true })
   })
 })
@@ -84,9 +86,8 @@ router.post('/login', (req, res, next) => {
   })(req, res, next)
 })
 
-router.get('/loggedin', (req, res, next) => {
+router.get('/loggedin', (req, res) => {
   res.status(200).json({ success: req.isAuthenticated(), user: req.user })
-  return
 })
 
 router.get('/logout', (req, res, next) => {
