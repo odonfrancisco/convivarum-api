@@ -1,0 +1,19 @@
+{
+  "extends": ["zavatta", "prettier"],
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "requireConfigFile": false,
+    "babelOptions": {
+      "parserOpts": {
+        "plugins": ["importAssertions"]
+      }
+    }
+  },
+  "rules": {
+    "no-console": 1,
+    "camelcase": 0,
+    "max-nested-callbacks": [1, 4],
+    "max-depth": [1, 5],
+    "default-case": 0
+  }
+}
