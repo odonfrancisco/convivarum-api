@@ -62,7 +62,7 @@ export default class FriendPicker {
       current: true,
       contacted: true,
       lastContacted: Date.now(),
-      interactions: ++this.current.interactions,
+      interactions: ++this.randomDoc.interactions,
     })
 
     if (save) await this.saveFriends()
