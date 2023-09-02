@@ -21,13 +21,13 @@ const update = async () => {
     if (!user.action) continue
 
     user.action = { [CONVENE]: user.action[HANG] || user.action[CONVENE], ...user.action }
-    if (process.env.NODE_ENV === 'prod') delete user.action[HANG]
+    if (process.env.NODE_ENV === 'production') delete user.action[HANG]
     uBulk.find({ _id: user._id }).updateOne({ $set: { action: user.action } })
   }
   for (const friend of friends) {
     if (friend.action !== HANG) continue
     friend.action = CONVENE
-    if (process.env.NODE_ENV === 'prod') delete friend.action[HANG]
+    if (process.env.NODE_ENV === 'production') delete friend.action[HANG]
     fBulk.find({ _id: friend._id }).updateOne({ $set: { action: friend.action } })
     // proms.push(friend.save)
   }
