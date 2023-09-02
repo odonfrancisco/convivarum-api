@@ -3,28 +3,8 @@ import express from 'express'
 import { Friend } from '#schema/index.js'
 const router = express.Router()
 
-import { actions, validActions } from '#config.js'
+import { ACTIONS, VALID_ACTIONS, DOC_LIMIT } from '#config.js'
 import FriendPicker from '#fn/FriendPicker.js'
-
-const sortTypes = {
-  enabled: {
-    fields: ['enabled', 'disabled'],
-    check: doc => (doc.enabled ? 'enabled' : 'disabled'),
-  },
-  // Want to combine the following two
-  action: {
-    fields: actions,
-    check: doc => doc.action,
-  },
-  contacted: {
-    fields: ['true', 'false'],
-    check: doc => doc.contacted,
-  },
-  current: {
-    fields: actions,
-    check: doc => doc.current && doc.action,
-  },
-}
 
 router.post('/create', async (req, res) => {
   const user = req.user
@@ -36,7 +16,7 @@ router.post('/create', async (req, res) => {
       .send({ msg: 'Please provide both a name and the preferred reach out action' })
   }
 
-  if (!validActions[action]) {
+  if (!VALID_ACTIONS[action]) {
     return res.status(400).send({ msg: 'Please provide a valid action' })
   }
 
@@ -61,32 +41,16 @@ router.post('/create', async (req, res) => {
 
 router.get('/get', async (req, res) => {
   const user = req.user
-  const docs = await Friend.find({ user: user._id }).lean()
+  const data = await Friend.find({ user: user._id }).limit(DOC_LIMIT).lean()
 
-  // Should really be the frontend doing all the sorting. need to be careful sending too large of a payload
-  if (!sortTypes[req.query.sort]) req.query.sort = 'enabled'
-
-  const { fields, check } = sortTypes[req.query.sort]
-
-  const ret = fields.reduce((a, c) => {
-    a[c] = []
-    return a
-  }, {})
-
-  for (const doc of docs) {
-    const field = check(doc)
-    if (!ret[field]) continue
-    ret[field].push(doc)
-  }
-
-  res.status(200).json({ data: ret })
+  res.status(200).json({ data })
 })
 
 router.post('/update/:id', async (req, res) => {
   const updates = req.body
   const id = req.params?.id
   if (!id) return res.status(400).send({ msg: 'Please ensure updating a valid friend document' })
-  if (!validActions[updates.action]) {
+  if (!VALID_ACTIONS[updates.action]) {
     return res.status(400).send({ msg: 'Please provide a valid action' })
   }
 

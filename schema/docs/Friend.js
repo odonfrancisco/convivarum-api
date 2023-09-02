@@ -1,11 +1,11 @@
 import mongoose from 'mongoose'
 
-import { actions } from '#config.js'
+import { ACTIONS } from '#config.js'
 
 const schema = new mongoose.Schema({
   name: { type: String, required: true },
   // The way main user would like to reach out
-  action: { type: String, required: true, enum: actions },
+  action: { type: String, required: true, enum: ACTIONS },
   user: { type: mongoose.Schema.Types.ObjectId, required: true },
   enabled: { type: Boolean, required: true, default: true },
   contacted: { type: Boolean, required: true, default: false },

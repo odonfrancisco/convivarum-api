@@ -4,7 +4,7 @@ import { User } from '#schema/index.js'
 const router = express.Router()
 
 import validateEmail from '#fn/validateEmail.js'
-import { validActions } from '#config.js'
+import { VALID_ACTIONS } from '#config.js'
 import roundHour from '#fn/roundHour.js'
 
 router.get('/get', async (req, res) => {
@@ -29,7 +29,7 @@ router.post('/update', async (req, res) => {
     if (!key.startsWith('action')) continue
     const action = key.split('.')[1]
     if (!Number.isInteger(int)) body[key] = 0
-    if (!validActions[action]) {
+    if (!VALID_ACTIONS[action]) {
       res.status(400).json({ msg: 'Please submit valid action' })
       return
     }
