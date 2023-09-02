@@ -29,7 +29,7 @@ const allowedOrigins = ['http://localhost:3000', 'https://convivarum.odonfrancis
   {},
 )
 
-app.use(morgan('dev'))
+app.use(morgan('common'))
 app.use(bodyParser.json())
 app.use(cookieParser())
 app.use(

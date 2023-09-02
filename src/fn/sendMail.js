@@ -55,8 +55,8 @@ const mailTypes = {
 <h3>Cool stuff!</h3>
 <p>Over time I'd like to slowly introduce new features & optimizations. A short list:</p>
 <ul class="features">
-    <li>Improve the friend sorting (bit janky as of now)</li>
-    <li>Some backend <> frontend optimizations (you won't notice this, will reduce the load on my API)</li>
+    <li>Improve the friend sorting (bit janky as of now)</li> ✅
+    <li>Some backend <> frontend optimizations (you won't notice this, will reduce the load on my API)</li> ✅
     <li>A "pause" button to chill on the intervals for a bit</li>
     <li>Notes per interaction per friend (you'll be able to see a history of your interactions alongside the notes)</li>
     <li>Integrate Google calendar</li>
