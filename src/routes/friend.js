@@ -3,7 +3,7 @@ import express from 'express'
 import { Friend } from '#schema/index.js'
 const router = express.Router()
 
-import { ACTIONS, VALID_ACTIONS, DOC_LIMIT } from '#config.js'
+import { VALID_ACTIONS, DOC_LIMIT } from '#config.js'
 import FriendPicker from '#fn/FriendPicker.js'
 
 router.post('/create', async (req, res) => {
@@ -55,9 +55,9 @@ router.post('/update/:id', async (req, res) => {
   }
 
   // Need to inc interactions
-  const updatedFriend = await Friend.findByIdAndUpdate({ _id: id }, { $set: updates })
+  const oldFriendDoc = await Friend.findByIdAndUpdate({ _id: id }, { $set: updates })
 
-  res.status(200).json({ data: updatedFriend })
+  res.status(200).json({ data: { cur: { ...updates, _id: id }, old: oldFriendDoc } })
 })
 
 router.get('/current', async (req, res) => {
@@ -83,11 +83,12 @@ router.get('/changeCurrent', async (req, res) => {
   const action = req.query.action
 
   const Picker = new FriendPicker(user, action)
-  const { randomDoc } = await Picker.pickNewFriend(true)
+  const { randomDoc, current } = await Picker.pickNewFriend(true)
 
-  res
-    .status(200)
-    .send({ msg: `Successfully updated the current friend to ${randomDoc.name}`, data: randomDoc })
+  res.status(200).send({
+    msg: `Successfully updated the current friend to ${randomDoc.name}`,
+    data: { old: current, cur: randomDoc },
+  })
 })
 
 export default router
