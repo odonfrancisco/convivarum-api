@@ -83,7 +83,7 @@ router.get('/changeCurrent', async (req, res) => {
   const action = req.query.action
 
   const Picker = new FriendPicker(user, action)
-  const { randomDoc, current } = await Picker.pickNewFriend(true)
+  const { randomDoc, current } = await Picker.pickNewFriend({ save: true, manual: true })
 
   res.status(200).send({
     msg: `Successfully updated the current friend to ${randomDoc.name}`,

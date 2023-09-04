@@ -10,7 +10,7 @@ export default class FriendPicker {
     this.action = action
   }
 
-  async pickNewFriend(save = false) {
+  async pickNewFriend({ save = false, manual = false }) {
     ;[this.uncontacted, this.current] = await Promise.all([
       Friend.find({
         action: this.action,
@@ -54,8 +54,11 @@ export default class FriendPicker {
       // Would have to do something about lastContact, will probs be better once i switch to a historical approach using "interaction" docs
       this.current.set({
         current: false,
-        contacted: false,
-        interactions: --this.current.interactions,
+        // When manually changing current, set current.contacted to false and reduce num interactions
+        ...(manual && {
+          contacted: false,
+          interactions: --this.current.interactions,
+        }),
       })
     }
     this.randomDoc.set({
