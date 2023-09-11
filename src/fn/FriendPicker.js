@@ -10,7 +10,7 @@ export default class FriendPicker {
     this.action = action
   }
 
-  async pickNewFriend({ save = false, manual = false }) {
+  async pickNewFriend({ save = false, manual = false } = {}) {
     ;[this.uncontacted, this.current] = await Promise.all([
       Friend.find({
         action: this.action,
